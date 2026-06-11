@@ -63,5 +63,49 @@
         <script src="./layers/layers.js" type="text/javascript"></script> 
         <script src="./resources/Autolinker.min.js"></script>
         <script src="./resources/qgis2web.js"></script>        
+    
+        <script>
+        window.addEventListener('load', function() {
+            if (typeof lyr_Kec_Weda_Tengah_2 !== 'undefined') {
+                var originalFeatures = lyr_Kec_Weda_Tengah_2.getSource().getFeatures().slice();
+
+                window.addEventListener('message', function(event) {
+                    if (event.data.type === 'FILTER_RSEI_LEVEL') {
+                        var activeLevels = event.data.levels;
+                        var source = lyr_Kec_Weda_Tengah_2.getSource();
+                        
+                        source.clear();
+                        
+                        var filteredFeatures = originalFeatures.filter(function(feature) {
+                            var props = feature.getProperties();
+                            var rseiValue = "";
+                            
+                            for (var key in props) {
+                                if (typeof props[key] === 'string') {
+                                    var val = props[key].toLowerCase();
+                                    if (val.includes('excellent') || val.includes('good') || val.includes('moderate') || val.includes('poor') || val.includes('bad')) {
+                                        rseiValue = val;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (!rseiValue) return true;
+                            
+                            if (rseiValue.includes("excellent")) return activeLevels.excellent;
+                            if (rseiValue.includes("good")) return activeLevels.good;
+                            if (rseiValue.includes("moderate")) return activeLevels.moderate;
+                            if (rseiValue.includes("poor")) return activeLevels.poor;
+                            if (rseiValue.includes("bad")) return activeLevels.bad;
+                            
+                            return true;
+                        });
+                        
+                        source.addFeatures(filteredFeatures);
+                    }
+                });
+            }
+        });
+        </script>
     </body>
 </html>
